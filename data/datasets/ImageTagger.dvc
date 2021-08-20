@@ -1,0 +1,5 @@
+outs:
+- md5: 0136ea4c8f0508aabd8a00a1d21e4e4d.dir
+  size: 19162825290
+  nfiles: 26990
+  path: ImageTagger
