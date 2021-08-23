@@ -1,0 +1,14 @@
+sklearn
+pandas
+numpy
+tensorflow
+keras
+matplotlib
+albumentations
+tensorflow_probability
+tensorflow_addons
+visualkeras
+PyQt5
+dvc
+dvc[ssh]
+

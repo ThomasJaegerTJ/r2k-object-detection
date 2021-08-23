@@ -1,0 +1,21 @@
+dataset:
+  nr_records: 20
+  test_split: 0.2
+  val_split: 0.1
+
+  image:
+    width: 160
+    height: 120
+    channels: 1
+
+model:
+  layers: [[1, 24], [2, 24], [3, 24], [4, 24], [5, 24]]
+  grid:
+    h: 8
+    w: 10
+
+train:
+  batch_size: 20
+  epochs: 2 #226
+  early_stopping: true
+  lr: 0.001

@@ -1,0 +1,22 @@
+paths:
+  images: 'data/datasets/raw/ImageTagger'
+  raw_labels: 'data/datasets/raw/ImageTagger'
+  labels: 'data/datasets/ImageTagger/labels'
+  model_filename: 'experimodel.hdf5'
+  model: 'data/models/experimodel'
+
+  tfrecords: 'data/datasets/ImageTagger/records'
+  train_records: 'data/datasets/ImageTagger/records/train'
+  test_records: 'data/datasets/ImageTagger/records/test'
+  dataset_info: 'data/datasets/ImageTagger/info.json'
+
+  history: 'data/metrics/history.csv'
+  scores: 'data/metrics/scores.json'
+
+  out:
+    models: 'data/models/'
+    logs: 'data/logs/'
+    chkpts: 'data/checkpoints/'
+    graphs: 'data/graphs/'
+    tables: 'data/tables/'
+    metrics: 'data/metrics'

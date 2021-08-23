@@ -1,0 +1,57 @@
+vars:
+  - config.yaml
+
+stages:
+  generate_csv:
+    cmd: python src/generate_csv.py --csv_dir=${paths.raw_labels} --output_dir=${paths.labels}
+    deps:
+    - ${paths.raw_labels}
+    - src/generate_csv.py
+    outs:
+    - ${paths.labels}
+
+  generate_tfrecord:
+    cmd: python src/generate_tfrecord.py --output_dir=${paths.tfrecords} --images_dir=${paths.images} --csv_dir=${paths.labels} --info_path=${paths.dataset_info}
+    deps:
+    - ${paths.labels}
+    - ${paths.images}
+    - src/generate_tfrecord.py
+    params:
+    - dataset.image.height
+    - dataset.image.width
+    - dataset.image.channels
+    - dataset.nr_records
+    - dataset.test_split
+    outs:
+    - ${paths.tfrecords}
+    - ${paths.dataset_info}
+    
+  train:
+    cmd: python src/train.py --tfrecord_dir=${paths.train_records} --tfrecord_test_dir=${paths.test_records} --output_dir=${paths.model} --history_path=${paths.history} --dataset_info_path=${paths.dataset_info}
+    deps:
+    - ${paths.tfrecords}
+    - ${paths.dataset_info}
+    - src/train.py
+    params:
+    - model.layers
+    - train.batch_size
+    - train.epochs
+    - train.early_stopping
+    - train.lr
+    - dataset.val_split
+    outs:
+    - ${paths.model}
+    plots:
+      - ${paths.history}:
+          cache: false
+
+  evaluate:
+    cmd: python src/evaluate.py --model_path=${paths.model}/${paths.model_filename} --testset_dir=${paths.test_records} --scores_path=${paths.scores} --dataset_info_path=${paths.dataset_info}
+    deps:
+    - ${paths.model}
+    - ${paths.test_records}
+    - ${paths.dataset_info}
+    - src/evaluate.py
+    metrics:
+      - ${paths.scores}:
+          cache: false
