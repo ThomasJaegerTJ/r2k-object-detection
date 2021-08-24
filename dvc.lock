@@ -1,0 +1,112 @@
+schema: '2.0'
+stages:
+  generate_csv:
+    cmd: python src/generate_csv.py --csv_dir=data/datasets/raw/ImageTagger --output_dir=data/datasets/ImageTagger/labels
+    deps:
+    - path: data/datasets/raw/ImageTagger
+      md5: 0136ea4c8f0508aabd8a00a1d21e4e4d.dir
+      size: 19162825290
+      nfiles: 26990
+    - path: src/generate_csv.py
+      md5: f4ac5c66c6c0dcac45eb31410b070dc9
+      size: 2776
+    outs:
+    - path: data/datasets/ImageTagger/labels
+      md5: f373fb62902bf4242bd26657aaee40b0.dir
+      size: 1123069
+      nfiles: 11
+  generate_tfrecord:
+    cmd: python src/generate_tfrecord.py --output_dir=data/datasets/ImageTagger/records
+      --images_dir=data/datasets/raw/ImageTagger --csv_dir=data/datasets/ImageTagger/labels
+      --info_path=data/datasets/ImageTagger/info.json
+    deps:
+    - path: data/datasets/ImageTagger/labels
+      md5: f373fb62902bf4242bd26657aaee40b0.dir
+      size: 1123069
+      nfiles: 11
+    - path: data/datasets/raw/ImageTagger
+      md5: 0136ea4c8f0508aabd8a00a1d21e4e4d.dir
+      size: 19162825290
+      nfiles: 26990
+    - path: src/generate_tfrecord.py
+      md5: bec15d3f995fe0628e338afdd73e0feb
+      size: 6346
+    params:
+      params.yaml:
+        dataset.image.channels: 1
+        dataset.image.height: 120
+        dataset.image.width: 160
+        dataset.nr_records: 20
+        dataset.test_split: 0.2
+    outs:
+    - path: data/datasets/ImageTagger/info.json
+      md5: 2ae9c0e73ac02f5c23d63a192d484c85
+      size: 72
+    - path: data/datasets/ImageTagger/records
+      md5: 7e3eb253b1dd1ba283950894b9cf6ac3.dir
+      size: 69272946
+      nfiles: 20
+  train:
+    cmd: python src/train.py --tfrecord_dir=data/datasets/ImageTagger/records/train
+      --tfrecord_test_dir=data/datasets/ImageTagger/records/test --output_dir=data/models/first-run
+      --history_path=data/metrics/history.csv --dataset_info_path=data/datasets/ImageTagger/info.json
+    deps:
+    - path: data/datasets/ImageTagger/info.json
+      md5: 2ae9c0e73ac02f5c23d63a192d484c85
+      size: 72
+    - path: data/datasets/ImageTagger/records
+      md5: 7e3eb253b1dd1ba283950894b9cf6ac3.dir
+      size: 69272946
+      nfiles: 20
+    - path: src/train.py
+      md5: 74c1777028762396d2c0b25825d7cf99
+      size: 5133
+    params:
+      params.yaml:
+        dataset.val_split: 0.1
+        model.layers:
+        - - 1
+          - 24
+        - - 2
+          - 24
+        - - 3
+          - 24
+        - - 4
+          - 24
+        - - 5
+          - 24
+        train.batch_size: 20
+        train.early_stopping: true
+        train.epochs: 1
+        train.lr: 0.001
+    outs:
+    - path: data/metrics/history.csv
+      md5: 5d59fa49199fb7f0b129452c78cefa76
+      size: 63
+    - path: data/models/first-run
+      md5: d59cacf71aed82f4ccd2d8450e788a1d.dir
+      size: 4326995
+      nfiles: 5
+  evaluate:
+    cmd: python src/evaluate.py --model_path=data/models/first-run/first-run.hdf5
+      --testset_dir=data/datasets/ImageTagger/records/test --scores_path=data/metrics/scores.json
+      --dataset_info_path=data/datasets/ImageTagger/info.json
+    deps:
+    - path: data/datasets/ImageTagger/info.json
+      md5: 2ae9c0e73ac02f5c23d63a192d484c85
+      size: 72
+    - path: data/datasets/ImageTagger/records/test
+      md5: 18343b10e94e0ba08057de40861df479.dir
+      size: 13839625
+      nfiles: 4
+    - path: data/models/first-run
+      md5: d59cacf71aed82f4ccd2d8450e788a1d.dir
+      size: 4326995
+      nfiles: 5
+    - path: src/evaluate.py
+      md5: 8d508cb96b7220ba89d0b5970130a4bf
+      size: 4162
+    outs:
+    - path: data/metrics/scores.json
+      md5: 93ead7719b79e9f189fb65d5afd66c7a
+      size: 651
