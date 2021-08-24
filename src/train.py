@@ -10,12 +10,6 @@
     python src/train.py --tfrecord_dir=data/datasets/simulator/records --output_dir=data/models/experimodel
 '''
 
-'''
-Edit: Connor Lismore
-Date: 05.08.2021
-Addition of enablin/disabling of data augmentation
-'''
-
 import os
 from time import time
 from absl import app, logging
@@ -24,6 +18,7 @@ import util.dataset as ds
 import util.model as md
 import util.utils as util
 import pandas as pd
+import numpy as np
 from tensorflow.python.framework.versions import VERSION
 if VERSION >= "2.0.0a0":
     import tensorflow.compat.v1 as tf
@@ -51,13 +46,14 @@ flags.DEFINE_string('logs_dir', 'data/logs/', 'Path to logs')
 flags.DEFINE_string('history_path', '', 'Path to history CSV')
 flags.DEFINE_string('dataset_info_path', '', 'Path to dataset information file')
 flags.DEFINE_boolean('export_tflite', False, 'Export model as .tflite')
-flags.DEFINE_boolean('augment_data', False, 'Apply Augmentation to the train dataset')
 FLAGS = flags.FLAGS
 
 
 def compile_model(model):
+    yolo_anchors = np.array([(0.1499, 0.3052), (0.0563, 0.0748)], np.float32)
     model.compile(
-                    loss=md.multi_nao_loss(),
+                    loss=md.multi_nao_loss(yolo_anchors),
+                    #loss=md.YoloLoss(yolo_anchors),
                     optimizer=tf.keras.optimizers.Adam(learning_rate=params.train.lr),
                 )
 
@@ -75,7 +71,7 @@ def train(model, trainset, valset):
                     ReduceLROnPlateau(verbose=1)
                 ]
     if params.train.early_stopping:
-        callbacks.append(EarlyStopping(patience=20, verbose=1, restore_best_weights=True, monitor='val_loss'))
+        callbacks.append(EarlyStopping(patience=15, verbose=1, restore_best_weights=True, monitor='val_loss'))
 
     history = model.fit(
         trainset,
@@ -117,7 +113,7 @@ def main(_):
 
     # Open a strategy scope.
     #with strategy.scope():
-    model = md.MultiNaoModel((params.dataset.image.size[1], params.dataset.image.size[0]), params.model.layers)
+    model = md.MultiNaoModel((params.dataset.image.size[1], params.dataset.image.size[0]), params.model.layers, params.train.batch_size)
     model = compile_model(model)
     
     tfrecord_paths = [os.path.join(FLAGS.tfrecord_dir, f) for f in os.listdir(FLAGS.tfrecord_dir)]
@@ -125,11 +121,8 @@ def main(_):
 
     #trainset = ds.get_optimised_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
     #valset = ds.get_optimised_dataset(tfrecord_test_paths, params.train.batch_size, params.model.grid.shape)
-    if FLAGS.augment_data:
-        fullset = ds.get_augmented_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
-    else:
-        fullset = ds.get_optimised_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
     
+    fullset = ds.get_optimised_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
     val_count = int(((ds_info['train_split_count']/2) * params.dataset.val_split) / params.train.batch_size)
 
     valset = fullset.take(val_count)

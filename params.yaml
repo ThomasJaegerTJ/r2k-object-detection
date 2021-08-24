@@ -9,13 +9,13 @@ dataset:
     channels: 1
 
 model:
-  layers: [[1, 24], [2, 24], [3, 24], [4, 24], [5, 24]]
+  layers: [[1, 16], [2, 24], [3, 24], [4, 24], [4, 24]]
   grid:
     h: 8
     w: 10
 
 train:
-  batch_size: 20
-  epochs: 2 #226
+  batch_size: 8
+  epochs: 316
   early_stopping: true
-  lr: 0.001
+  lr: 0.01

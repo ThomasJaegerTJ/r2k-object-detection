@@ -12,9 +12,6 @@ import tensorflow as tf
 import pandas as pd
 import os
 import util.utils as util
-from functools import partial
-
-AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
 def parse_tfrecord(tfrecord):
@@ -57,43 +54,6 @@ def get_optimised_dataset(path, batch_size, grid_shape, shuffle=True):
     dset_opt = dset.map(lambda x,y: (x, util.preprocess_true_boxes(y, grid_shape)))
     if shuffle: 
         dset_opt = dset_opt.shuffle(buffer_size=512)
-    dset_opt = dset_opt.batch(batch_size, drop_remainder=True).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-
-    return dset_opt
-
-
-
-def image_aug_fn(image, label, img_size):              
-    aug_data = util.augment(image = image, bboxes = image)
-    aug_img = aug_data["image"]
-    aug_img = tf.cast(aug_img/255.0, tf.float32)
-    aug_img = tf.image.resize(aug_img, size=[120, 160])
-
-    return aug_img
-
-def process_data(image, label, img_size):
-    aug_img = tf.numpy_function(func=image_aug_fn, inp=[image, label, img_size], Tout=tf.uint8)
-
-    return aug_img, label
-
-def set_shapes(img, label, img_shape=(None,None,1)):
-    img.set_shape(img_shape)
-    label.set_shape([None, 5])
-    print(img)
-    print(label)
-    return img, label
-
-def get_augmented_dataset(path, batch_size, grid_shape, shuffle=True):
-    dset = load_tfrecord_dataset(path)
-
-    dset_aug = dset.map(partial(process_data, img_size = 160),num_parallel_calls=AUTOTUNE).prefetch(AUTOTUNE)
-    dset_aug = dset_aug.map(set_shapes, num_parallel_calls=AUTOTUNE).prefetch(AUTOTUNE)
-
-    dset_opt = dset.map(lambda x,y: (x, util.preprocess_true_boxes(y, grid_shape)))
-
-    if shuffle:
-        dset_opt = dset_opt.shuffle(buffer_size = 512)
-    
     dset_opt = dset_opt.batch(batch_size, drop_remainder=True).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
     return dset_opt

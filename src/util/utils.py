@@ -5,13 +5,6 @@ Author: David Kostka
 Date: 15.02.2021
 '''
 
-'''
-Edit: Connor Lismore
-Date: 05.08.2021
-Addition of Data Augmentation utils
-'''
-
-from albumentations.augmentations.transforms import CLAHE, ColorJitter, Downscale, ISONoise
 import yaml
 from collections import namedtuple
 import os
@@ -19,7 +12,6 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
 import sys
-import albumentations as A          #For Data Augmentatio
 
 class Object(object):
     pass
@@ -147,10 +139,10 @@ def preprocess_true_boxes(true_boxes, grid_shape):
 
     conv_height = grid_shape[1]
     conv_width = grid_shape[0]
-    num_box_params = 5 + 2
-
+    num_box_params = 5
+    num_classes = 2
     matching_true_boxes = tf.zeros(
-        (conv_height, conv_width, num_box_params),
+        (conv_height, conv_width, num_classes, num_box_params),
         dtype=tf.float32)
 
     true_boxes = convert_to_xywh(true_boxes)
@@ -158,65 +150,63 @@ def preprocess_true_boxes(true_boxes, grid_shape):
     cell_rounded = tf.math.floor(cell)
     offset = cell - cell_rounded
     cell_rounded = tf.cast(cell_rounded, tf.int64)
-    wh = true_boxes[..., 2:4] * grid_shape
+    wh = true_boxes[..., 2:4] #* grid_shape
 
-    classes = tf.one_hot(tf.cast(true_boxes[..., 4], tf.int32), depth=3)
+    classes = tf.one_hot(tf.cast(true_boxes[..., 4], tf.int64), depth=3)
     conf = 1 - classes[..., 0:1]
+    indx = tf.cast(tf.maximum(true_boxes[..., 4] - 1, 0), tf.int64)
+    local_boxes = tf.concat([tf.cast(offset, tf.float32), tf.cast(wh, tf.float32), tf.cast(conf, tf.float32)], axis=-1)
 
-    local_boxes = tf.concat([tf.cast(offset, tf.float32), tf.cast(wh, tf.float32), tf.cast(conf, tf.float32), classes[..., 1:]], axis=-1)
-
-    return tf.tensor_scatter_nd_update(matching_true_boxes, tf.stack([cell_rounded[:,1], cell_rounded[:,0]], axis=-1), local_boxes)
+    return tf.tensor_scatter_nd_update(matching_true_boxes, tf.stack([cell_rounded[:,1], cell_rounded[:,0], indx], axis=-1), local_boxes)
 
 def create_grid(grid_shape):
-    grid_y = tf.tile(tf.reshape(tf.range(grid_shape[0]), [-1, 1, 1]),
-        [1, grid_shape[1], 1])
-    grid_x = tf.tile(tf.reshape(tf.range(grid_shape[1]), [1, -1, 1]),
-        [grid_shape[0], 1, 1])
+    grid_y = tf.tile(tf.reshape(tf.range(grid_shape[0]), [-1, 1, 1, 1]),
+        [1, grid_shape[1], 2, 1])
+    grid_x = tf.tile(tf.reshape(tf.range(grid_shape[1]), [1, -1, 1, 1]),
+        [grid_shape[0], 1, 2, 1])
     grid = tf.concat([grid_x, grid_y], -1)
     grid = tf.cast(grid, tf.float32)
 
     return grid
 
-def get_bbox_list_from_features(feature_map):
-    # Ref.: https://github.com/qqwweee/keras-yolo3/blob/master/yolo3/model.py#L122
 
-    grid_shape = tf.shape(feature_map)[1:3]
-
-    grid = create_grid(grid_shape)
-    
-    feature_map = tf.reshape(
-        feature_map, [-1, grid_shape[0], grid_shape[1], 5+2])
-
-    xy = (tf.sigmoid(feature_map[..., :2]) + grid) / tf.cast(grid_shape[::-1], tf.float32)
-    wh = tf.maximum(feature_map[..., 2:4] / tf.cast(grid_shape[::-1], tf.float32), 0)
-    conf = tf.sigmoid(feature_map[..., 4:5])
-    classes = tf.sigmoid(feature_map[..., 5:])
-
-    return tf.concat([xy, wh, conf, classes], axis=-1)
-
-def get_bbox_list_from_labels(label_feature_map):
-    grid_shape = tf.shape(label_feature_map)[1:3]
-
+def get_bbox_list_from_feature_map(xy, wh, conf, conf_threshold = 0.5):
+    grid_shape = tf.shape(xy)[-4:-2]
     grid = create_grid(grid_shape)
 
-    label_feature_map = tf.reshape(
-        label_feature_map, [-1, grid_shape[0], grid_shape[1], 5+2])
+    #xy = (label_feature_map[..., :2] + grid) / tf.cast(grid_shape[::-1], tf.float32)
+    #wh = label_feature_map[..., 2:4] / tf.cast(grid_shape[::-1], tf.float32)
+    #conf = label_feature_map[..., 4:5]
 
-    xy = (label_feature_map[..., :2] + grid) / tf.cast(grid_shape[::-1], tf.float32)
-    wh = label_feature_map[..., 2:4] / tf.cast(grid_shape[::-1], tf.float32)
-    conf = label_feature_map[..., 4:5]
-    classes = label_feature_map[..., 5:7]
+    xy = (xy + grid) / tf.cast(grid_shape[::-1], tf.float32)
+    #wh = wh / tf.cast(grid_shape[::-1], tf.float32)
 
-    #return tf.concat([xy, wh, conf, tf.cast(classes_idx[..., 0:2], tf.float32)], axis=-1)
-    return tf.concat([xy, wh, conf, classes], axis=-1)
+    found = tf.where(tf.greater(conf, conf_threshold))
+    classes = tf.expand_dims(found[..., 3], axis=-1)
+    bboxes = tf.concat([xy, wh, conf], axis=-1)
+    bbox_list = tf.gather_nd(bboxes, found[..., :-1])
 
-def postprocess_model_output(pred, img_size, conf_threshold, iou_threshold=0.6):
-    bbox_list = get_bbox_list_from_features(pred)
+    return tf.concat([bbox_list, tf.cast(classes, tf.float32)], axis=-1)
 
-    # this line is needed, otherwise nms throws an error because bbox_list somehow has the shape [1, 8, 10, 7], don't know why
-    filtered_bbox_list = bbox_list[bbox_list[..., 4] > conf_threshold]
+# TODO: Redundant in model.py
+def activate_feature_map(feats, anchors):
+    feats = tf.reshape(feats, [-1, 8, 10, 2, 5])
+    conf = tf.sigmoid(feats[..., 4:5])
+    xy = tf.sigmoid(feats[..., 0:2])
+    wh = tf.maximum(feats[..., 2:4], 0.0) * anchors
 
-    bbox_list_corners_norm = convert_to_corners(filtered_bbox_list)
+    return xy, wh, conf
+
+def postprocess_model_output(pred, img_size, conf_threshold, anchors, iou_threshold=0.6):
+    grid_shape = tf.shape(pred)[-4:-2]
+
+    pred = tf.reshape(
+        pred, [-1, grid_shape[0], grid_shape[1], 2, 5])
+
+    xy, wh, conf = activate_feature_map(pred, anchors)
+    bbox_list = get_bbox_list_from_feature_map(xy, wh, conf, conf_threshold)
+
+    bbox_list_corners_norm = convert_to_corners(bbox_list)
     bbox_list_corners = unnormalize_corners(bbox_list_corners_norm, img_size)
     
     supressed_idxs = tf.image.non_max_suppression(bbox_list_corners[..., :4], bbox_list_corners[..., 4], 80, score_threshold=conf_threshold, iou_threshold=iou_threshold)
@@ -225,27 +215,13 @@ def postprocess_model_output(pred, img_size, conf_threshold, iou_threshold=0.6):
     return bbox_list_suppressed
 
 def postprocess_dataset_labels(lbls, img_size):
-    bbox_list = get_bbox_list_from_labels(lbls)
-    filtered_bbox_list = bbox_list[bbox_list[..., 4] > 0.9]
-    bbox_list_corners_norm = convert_to_corners(filtered_bbox_list)
+    grid_shape = tf.shape(lbls)[-4:-2]
+    lbls = tf.reshape(
+        lbls, [-1, grid_shape[0], grid_shape[1], 2, 5])
+
+    bbox_list = get_bbox_list_from_feature_map(lbls[..., 0:2], lbls[..., 2:4], lbls[..., 4:5])
+
+    bbox_list_corners_norm = convert_to_corners(bbox_list)
     bbox_list_corners = unnormalize_corners(bbox_list_corners_norm, img_size)
 
     return bbox_list_corners
-
-
-bbox_params = {'format': 'pascal_voc', 'label_fields': ['labels']}
-
-augment = A.Compose([
-            A.CLAHE(p = 0.4),
-            A.ColorJitter(brightness = 0.4, contrast = 0.4, saturation = 0.4, hue = 0.4, p = 0.4),
-            # A.Downscale(scale_min = 0.25, scale_max = 0.25, p = 0.5),
-            A.ISONoise(color_shift = (0.01, 0.07), intensity = (0.1, 0.7), p = 0.4),
-            A.MotionBlur(blur_limit = (3,7), p = 0.4), #Blur Image to random levels
-            A.RandomBrightnessContrast(brightness_limit = 0.6, contrast_limit = 0.6, p = 0.4), #Random adjustments in brightness and contrast
-            A.GaussNoise(var_limit = (10.0, 60.0), mean = 0, p = 0.4),
-            A.RGBShift(r_shift_limit = 25, g_shift_limit = 25, b_shift_limit = 25, p = 0.4)
-            #A.RandomShadow(shadow_roi=(0, 0.5, 1, 1), num_shadows_lower = 1, num_shadows_upper = 2, shadow_dimension= = 5, p = 0.5),
-            #A.RandomSunFlare(flare_roi = (0, 0, 1, 0.5), angle_lower = 0, angle_upper = 1, num_flare_circles_lower = 6, num_flare_circles_upper = 10, src_radius = 400, src_color = (255, 255, 255), p = 0.5),
-            
-            #A.HorizontalFlip(p = 0.5)
-        ])#, bbox_params=bbox_params)
