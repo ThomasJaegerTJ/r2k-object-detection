@@ -15,7 +15,7 @@ model:
     w: 10
 
 train:
-  batch_size: 8
-  epochs: 316
+  batch_size: 16
+  epochs: 200
   early_stopping: true
   lr: 0.01

@@ -48,7 +48,7 @@ stages:
       nfiles: 20
   train:
     cmd: python src/train.py --tfrecord_dir=data/datasets/ImageTagger/records/train
-      --tfrecord_test_dir=data/datasets/ImageTagger/records/test --output_dir=data/models/first-run
+      --tfrecord_test_dir=data/datasets/ImageTagger/records/test --output_dir=data/models/experimodel
       --history_path=data/metrics/history.csv --dataset_info_path=data/datasets/ImageTagger/info.json
     deps:
     - path: data/datasets/ImageTagger/info.json
@@ -59,36 +59,36 @@ stages:
       size: 69272946
       nfiles: 20
     - path: src/train.py
-      md5: 74c1777028762396d2c0b25825d7cf99
-      size: 5133
+      md5: a7272c7cce28afe7a6b7f610d20d905c
+      size: 5466
     params:
       params.yaml:
         dataset.val_split: 0.1
         model.layers:
         - - 1
-          - 24
+          - 16
         - - 2
           - 24
         - - 3
           - 24
         - - 4
           - 24
-        - - 5
+        - - 4
           - 24
-        train.batch_size: 20
+        train.batch_size: 16
         train.early_stopping: true
-        train.epochs: 1
-        train.lr: 0.001
+        train.epochs: 200
+        train.lr: 0.01
     outs:
     - path: data/metrics/history.csv
-      md5: 5d59fa49199fb7f0b129452c78cefa76
-      size: 63
-    - path: data/models/first-run
-      md5: d59cacf71aed82f4ccd2d8450e788a1d.dir
-      size: 4326995
+      md5: 5d235dd5760dae8139631d2f850a4e8a
+      size: 8659
+    - path: data/models/experimodel
+      md5: 1a2f6cb38df5e01563a2675ef9c88879.dir
+      size: 3985000
       nfiles: 5
   evaluate:
-    cmd: python src/evaluate.py --model_path=data/models/first-run/first-run.hdf5
+    cmd: python src/evaluate.py --model_path=data/models/experimodel/experimodel.hdf5
       --testset_dir=data/datasets/ImageTagger/records/test --scores_path=data/metrics/scores.json
       --dataset_info_path=data/datasets/ImageTagger/info.json
     deps:
@@ -99,14 +99,14 @@ stages:
       md5: 18343b10e94e0ba08057de40861df479.dir
       size: 13839625
       nfiles: 4
-    - path: data/models/first-run
-      md5: d59cacf71aed82f4ccd2d8450e788a1d.dir
-      size: 4326995
+    - path: data/models/experimodel
+      md5: 1a2f6cb38df5e01563a2675ef9c88879.dir
+      size: 3985000
       nfiles: 5
     - path: src/evaluate.py
-      md5: 8d508cb96b7220ba89d0b5970130a4bf
-      size: 4162
+      md5: e73ba99db3e9d6e6ad8a26935ef16488
+      size: 4392
     outs:
     - path: data/metrics/scores.json
-      md5: 93ead7719b79e9f189fb65d5afd66c7a
-      size: 651
+      md5: a37525304cc937f814b202ac5cc500aa
+      size: 613

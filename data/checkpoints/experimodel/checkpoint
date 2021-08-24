@@ -1,0 +1,2 @@
+model_checkpoint_path: "experimodel_1.tf"
+all_model_checkpoint_paths: "experimodel_1.tf"

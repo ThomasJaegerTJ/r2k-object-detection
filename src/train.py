@@ -10,6 +10,8 @@
     python src/train.py --tfrecord_dir=data/datasets/simulator/records --output_dir=data/models/experimodel
 '''
 
+import wandb
+from wandb.keras import WandbCallback
 import os
 from time import time
 from absl import app, logging
@@ -77,7 +79,7 @@ def train(model, trainset, valset):
         trainset,
         validation_data=valset,
         epochs=params.train.epochs,
-        callbacks=[callbacks]
+        callbacks=[WandbCallback()]
     )
 
     return history
@@ -103,6 +105,19 @@ def save_model(model, path):
 def main(_):
     tf.get_logger().setLevel('ERROR')
 
+    wandb.login()
+   
+    # initialize wandb with your project name and optionally with configutations.
+    run = wandb.init(project='r2k-object-detection',
+               config={
+                  "learning_rate": 0.01,
+                  "epochs": 200,
+                  "batch_size": 16,
+                  "architecture": "CNN",
+                  "dataset": "ImageTagger"
+               })
+    config = wandb.config
+    
     # Multi GPU Support
     # See: https://keras.io/guides/distributed_training/
     #strategy = tf.distribute.MirroredStrategy()

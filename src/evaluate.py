@@ -62,7 +62,7 @@ def get_evaluation_summary(true_bboxes_list, pred_bboxes_list, ious, area_ranges
     coco_results = {}
 
     #TODO: This is slow, parallelize?
-    start = time.clock() 
+    #start = time.clock() 
     for iou in ious:
         for key, area_range in area_ranges.items():
             if key is 'full': key = ''
@@ -71,8 +71,8 @@ def get_evaluation_summary(true_bboxes_list, pred_bboxes_list, ious, area_ranges
             coco_results['Nao.nr_positives'] = str(coco_metr[0]['total positives'])
             coco_results['Ball.AP@' + str(round(iou*100)) + key] = coco_metr[1]['AP']
             coco_results['Ball.nr_positives'] = str(coco_metr[1]['total positives'])
-    end = time.clock() 
-    logging.info('Calculated metrics in ' + str(end-start) + ' seconds')
+    #end = time.clock() 
+    #logging.info('Calculated metrics in ' + str(end-start) + ' seconds')
 
     return coco_results
 
