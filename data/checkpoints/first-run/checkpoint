@@ -1,0 +1,2 @@
+model_checkpoint_path: "first-run_1.tf"
+all_model_checkpoint_paths: "first-run_1.tf"
