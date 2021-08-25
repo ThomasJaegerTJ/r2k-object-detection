@@ -5,7 +5,7 @@
 #### dvc init
 
 Repository r2k-object-detection 
-leer, außer einen Ordner data/datasets, dieser enthält ImageTagger 15 GB (ist nicht der komplette Datensatz) und ist zu finden auf der zwoogle4 /workspace/datasets.
+leer, außer einen Ordner data/datasets, dieser enthält ImageTagger 15 GB (komplettes Datenset)und ist zu finden auf der zwoogle4 /workspace/datasets.
 
 ```
 dvc init
