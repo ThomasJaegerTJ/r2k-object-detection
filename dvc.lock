@@ -52,11 +52,11 @@ stages:
       --history_path=data/metrics/history.csv --dataset_info_path=data/datasets/ImageTagger/info.json
     deps:
     - path: data/datasets/ImageTagger/info.json
-      md5: 2ae9c0e73ac02f5c23d63a192d484c85
-      size: 72
+      md5: 4893e09a38c861796343021aa3182d43
+      size: 73
     - path: data/datasets/ImageTagger/records
-      md5: 7e3eb253b1dd1ba283950894b9cf6ac3.dir
-      size: 69272946
+      md5: e0749aab2bc961ce5966cd082673a7f1.dir
+      size: 216767388
       nfiles: 20
     - path: src/train.py
       md5: a7272c7cce28afe7a6b7f610d20d905c
@@ -81,11 +81,11 @@ stages:
         train.lr: 0.01
     outs:
     - path: data/metrics/history.csv
-      md5: 5d235dd5760dae8139631d2f850a4e8a
-      size: 8659
+      md5: 18df3d633aae91af880325c107b1bdc4
+      size: 8585
     - path: data/models/experimodel
-      md5: 1a2f6cb38df5e01563a2675ef9c88879.dir
-      size: 3985000
+      md5: 341e3593c4faf22d0bfdec47ae1d80b9.dir
+      size: 4034150
       nfiles: 5
   evaluate:
     cmd: python src/evaluate.py --model_path=data/models/experimodel/experimodel.hdf5
@@ -93,20 +93,20 @@ stages:
       --dataset_info_path=data/datasets/ImageTagger/info.json
     deps:
     - path: data/datasets/ImageTagger/info.json
-      md5: 2ae9c0e73ac02f5c23d63a192d484c85
-      size: 72
+      md5: 4893e09a38c861796343021aa3182d43
+      size: 73
     - path: data/datasets/ImageTagger/records/test
-      md5: 18343b10e94e0ba08057de40861df479.dir
-      size: 13839625
+      md5: 0657338ac461264837aaacc6f00a65b1.dir
+      size: 43358676
       nfiles: 4
     - path: data/models/experimodel
-      md5: 1a2f6cb38df5e01563a2675ef9c88879.dir
-      size: 3985000
+      md5: 341e3593c4faf22d0bfdec47ae1d80b9.dir
+      size: 4034150
       nfiles: 5
     - path: src/evaluate.py
       md5: e73ba99db3e9d6e6ad8a26935ef16488
       size: 4392
     outs:
     - path: data/metrics/scores.json
-      md5: a37525304cc937f814b202ac5cc500aa
-      size: 613
+      md5: 2dcf8f80f9ecb57d792297cf018017bf
+      size: 618
