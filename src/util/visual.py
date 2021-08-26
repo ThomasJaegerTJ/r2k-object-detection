@@ -24,7 +24,7 @@ def plot_bbox_list(ax, true_bbox_list=None, pred_bbox_list=None):
         edge_clr = 'cyan'
         face_clr = [1,0,0,0.1]
         for bbox in pred_bbox_list:
-            if bbox[5] == 1:
+            if np.argmax(bbox[5:]) == 1:
                 edge_clr = 'yellow'
             else:
                 edge_clr = 'cyan'

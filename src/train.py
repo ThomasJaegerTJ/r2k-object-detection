@@ -10,8 +10,6 @@
     python src/train.py --tfrecord_dir=data/datasets/simulator/records --output_dir=data/models/experimodel
 '''
 
-import wandb
-from wandb.keras import WandbCallback
 import os
 from time import time
 from absl import app, logging
@@ -20,7 +18,6 @@ import util.dataset as ds
 import util.model as md
 import util.utils as util
 import pandas as pd
-import numpy as np
 from tensorflow.python.framework.versions import VERSION
 if VERSION >= "2.0.0a0":
     import tensorflow.compat.v1 as tf
@@ -53,10 +50,8 @@ FLAGS = flags.FLAGS
 
 
 def compile_model(model):
-    yolo_anchors = np.array([(0.1499, 0.3052), (0.0563, 0.0748)], np.float32)
     model.compile(
-                    loss=md.multi_nao_loss(yolo_anchors),
-                    #loss=md.YoloLoss(yolo_anchors),
+                    loss=md.multi_nao_loss(),
                     optimizer=tf.keras.optimizers.Adam(learning_rate=params.train.lr),
                 )
 
@@ -74,13 +69,13 @@ def train(model, trainset, valset):
                     ReduceLROnPlateau(verbose=1)
                 ]
     if params.train.early_stopping:
-        callbacks.append(EarlyStopping(patience=15, verbose=1, restore_best_weights=True, monitor='val_loss'))
+        callbacks.append(EarlyStopping(patience=20, verbose=1, restore_best_weights=True, monitor='val_loss'))
 
     history = model.fit(
         trainset,
         validation_data=valset,
         epochs=params.train.epochs,
-        callbacks=[WandbCallback()]
+        callbacks=[callbacks]
     )
 
     return history
@@ -106,19 +101,6 @@ def save_model(model, path):
 def main(_):
     tf.get_logger().setLevel('ERROR')
 
-    wandb.login()
-   
-    # initialize wandb with your project name and optionally with configutations.
-    run = wandb.init(project='r2k-object-detection',
-               config={
-                  "learning_rate": 0.01,
-                  "epochs": 200,
-                  "batch_size": 16,
-                  "architecture": "CNN",
-                  "dataset": "ImageTagger"
-               })
-    config = wandb.config
-    
     # Multi GPU Support
     # See: https://keras.io/guides/distributed_training/
     #strategy = tf.distribute.MirroredStrategy()
@@ -129,7 +111,7 @@ def main(_):
 
     # Open a strategy scope.
     #with strategy.scope():
-    model = md.MultiNaoModel((params.dataset.image.size[1], params.dataset.image.size[0]), params.model.layers, params.train.batch_size)
+    model = md.MultiNaoModel((params.dataset.image.size[1], params.dataset.image.size[0]), params.model.layers)
     model = compile_model(model)
     
     tfrecord_paths = [os.path.join(FLAGS.tfrecord_dir, f) for f in os.listdir(FLAGS.tfrecord_dir)]
@@ -137,12 +119,11 @@ def main(_):
 
     #trainset = ds.get_optimised_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
     #valset = ds.get_optimised_dataset(tfrecord_test_paths, params.train.batch_size, params.model.grid.shape)
-    
     if FLAGS.augment_data:
         fullset = ds.get_augmented_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
     else:
         fullset = ds.get_optimised_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
-        
+    
     val_count = int(((ds_info['train_split_count']/2) * params.dataset.val_split) / params.train.batch_size)
 
     valset = fullset.take(val_count)
