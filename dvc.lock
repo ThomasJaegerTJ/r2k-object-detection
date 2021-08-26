@@ -43,7 +43,7 @@ stages:
       md5: 4893e09a38c861796343021aa3182d43
       size: 73
     - path: data/datasets/ImageTagger/records
-      md5: e0749aab2bc961ce5966cd082673a7f1.dir
+      md5: 45dc2b67bf9bed2a1d64aec90f10d627.dir
       size: 216767388
       nfiles: 20
   train:

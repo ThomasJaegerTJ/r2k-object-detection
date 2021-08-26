@@ -12,7 +12,9 @@ import tensorflow as tf
 import pandas as pd
 import os
 import util.utils as util
+from functools import partial
 
+AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 def parse_tfrecord(tfrecord):
     IMAGE_FEATURE_MAP = {
