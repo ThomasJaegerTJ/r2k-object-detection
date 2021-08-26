@@ -48,6 +48,7 @@ flags.DEFINE_string('logs_dir', 'data/logs/', 'Path to logs')
 flags.DEFINE_string('history_path', '', 'Path to history CSV')
 flags.DEFINE_string('dataset_info_path', '', 'Path to dataset information file')
 flags.DEFINE_boolean('export_tflite', False, 'Export model as .tflite')
+flags.DEFINE_boolean('augment_data', True, 'Apply Augmentation to the train dataset')
 FLAGS = flags.FLAGS
 
 
@@ -137,7 +138,11 @@ def main(_):
     #trainset = ds.get_optimised_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
     #valset = ds.get_optimised_dataset(tfrecord_test_paths, params.train.batch_size, params.model.grid.shape)
     
-    fullset = ds.get_optimised_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
+    if FLAGS.augment_data:
+        fullset = ds.get_augmented_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
+    else:
+        fullset = ds.get_optimised_dataset(tfrecord_paths, params.train.batch_size, params.model.grid.shape)
+        
     val_count = int(((ds_info['train_split_count']/2) * params.dataset.val_split) / params.train.batch_size)
 
     valset = fullset.take(val_count)

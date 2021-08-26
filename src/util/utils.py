@@ -12,6 +12,8 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import numpy as np
 import sys
+import albumentations as A          #For Data Augmentatio
+from albumentations.augmentations.transforms import CLAHE, ColorJitter, Downscale, ISONoise
 
 class Object(object):
     pass
@@ -225,3 +227,20 @@ def postprocess_dataset_labels(lbls, img_size):
     bbox_list_corners = unnormalize_corners(bbox_list_corners_norm, img_size)
 
     return bbox_list_corners
+    
+bbox_params = {'format': 'pascal_voc', 'label_fields': ['labels']}
+
+augment = A.Compose([
+            A.CLAHE(p = 0.4),
+            A.ColorJitter(brightness = 0.4, contrast = 0.4, saturation = 0.4, hue = 0.4, p = 0.4),
+            # A.Downscale(scale_min = 0.25, scale_max = 0.25, p = 0.5),
+            A.ISONoise(color_shift = (0.01, 0.07), intensity = (0.1, 0.7), p = 0.4),
+            A.MotionBlur(blur_limit = (3,7), p = 0.4), #Blur Image to random levels
+            A.RandomBrightnessContrast(brightness_limit = 0.6, contrast_limit = 0.6, p = 0.4), #Random adjustments in brightness and contrast
+            A.GaussNoise(var_limit = (10.0, 60.0), mean = 0, p = 0.4),
+            A.RGBShift(r_shift_limit = 25, g_shift_limit = 25, b_shift_limit = 25, p = 0.4)
+            #A.RandomShadow(shadow_roi=(0, 0.5, 1, 1), num_shadows_lower = 1, num_shadows_upper = 2, shadow_dimension= = 5, p = 0.5),
+            #A.RandomSunFlare(flare_roi = (0, 0, 1, 0.5), angle_lower = 0, angle_upper = 1, num_flare_circles_lower = 6, num_flare_circles_upper = 10, src_radius = 400, src_color = (255, 255, 255), p = 0.5),
+            
+            #A.HorizontalFlip(p = 0.5)
+        ])#, bbox_params=bbox_params)

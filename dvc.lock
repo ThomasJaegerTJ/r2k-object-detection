@@ -12,9 +12,9 @@ stages:
       size: 2776
     outs:
     - path: data/datasets/ImageTagger/labels
-      md5: f373fb62902bf4242bd26657aaee40b0.dir
-      size: 1123069
-      nfiles: 11
+      md5: cbf4b2db22b29fca4703750020436266.dir
+      size: 3893629
+      nfiles: 29
   generate_tfrecord:
     cmd: python src/generate_tfrecord.py --output_dir=data/datasets/ImageTagger/records
       --images_dir=data/datasets/raw/ImageTagger --csv_dir=data/datasets/ImageTagger/labels
