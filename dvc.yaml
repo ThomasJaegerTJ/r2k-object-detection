@@ -2,13 +2,6 @@ vars:
   - config.yaml
 
 stages:
-  generate_csv:
-    cmd: python src/generate_csv.py --csv_dir=${paths.raw_labels} --output_dir=${paths.labels}
-    deps:
-    - ${paths.raw_labels}
-    - src/generate_csv.py
-    outs:
-    - ${paths.labels}
 
   generate_tfrecord:
     cmd: python src/generate_tfrecord.py --output_dir=${paths.tfrecords} --images_dir=${paths.images} --csv_dir=${paths.labels} --info_path=${paths.dataset_info}

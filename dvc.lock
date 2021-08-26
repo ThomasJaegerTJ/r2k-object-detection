@@ -21,9 +21,9 @@ stages:
       --info_path=data/datasets/ImageTagger/info.json
     deps:
     - path: data/datasets/ImageTagger/labels
-      md5: f373fb62902bf4242bd26657aaee40b0.dir
-      size: 1123069
-      nfiles: 11
+      md5: cbf4b2db22b29fca4703750020436266.dir
+      size: 3893629
+      nfiles: 29
     - path: data/datasets/raw/ImageTagger
       md5: 0136ea4c8f0508aabd8a00a1d21e4e4d.dir
       size: 19162825290
@@ -40,11 +40,11 @@ stages:
         dataset.test_split: 0.2
     outs:
     - path: data/datasets/ImageTagger/info.json
-      md5: 2ae9c0e73ac02f5c23d63a192d484c85
-      size: 72
+      md5: 4893e09a38c861796343021aa3182d43
+      size: 73
     - path: data/datasets/ImageTagger/records
-      md5: 7e3eb253b1dd1ba283950894b9cf6ac3.dir
-      size: 69272946
+      md5: e0749aab2bc961ce5966cd082673a7f1.dir
+      size: 216767388
       nfiles: 20
   train:
     cmd: python src/train.py --tfrecord_dir=data/datasets/ImageTagger/records/train
