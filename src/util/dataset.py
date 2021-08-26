@@ -16,7 +16,6 @@ from functools import partial
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
-
 def parse_tfrecord(tfrecord):
     IMAGE_FEATURE_MAP = {
         'image/filename': tf.io.FixedLenFeature([], tf.string),
@@ -60,9 +59,7 @@ def get_optimised_dataset(path, batch_size, grid_shape, shuffle=True):
     dset_opt = dset_opt.batch(batch_size, drop_remainder=True).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
     return dset_opt
-
-
-
+    
 def image_aug_fn(image, label, img_size):              
     aug_data = util.augment(image = image, bboxes = image)
     aug_img = aug_data["image"]

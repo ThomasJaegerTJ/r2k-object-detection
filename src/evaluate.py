@@ -39,20 +39,21 @@ FLAGS = flags.FLAGS
 def format_predictions(labels, predictions, nr_imgs):
     true_bboxes_list = []
     pred_bboxes_list = []
-    
+    #TODO: move yolo_anchors in configs
+    yolo_anchors = np.array([(0.1499, 0.3052), (0.0563, 0.0748)], np.float32)
+
     progbar = tf.keras.utils.Progbar(nr_imgs)
     
     #TODO: This is slow, speed it up somhow (no n^2 for loop)
     for id, (lbl, pred) in enumerate(zip(labels, predictions)):
         true_bboxes = lbl
-        pred_bboxes = util.postprocess_model_output([pred], params.dataset.image.size, 0.0)
-        #
+        pred_bboxes = util.postprocess_model_output(tf.expand_dims(pred, axis=0), params.dataset.image.size, 0.0, yolo_anchors)
+
         for bbox in true_bboxes:
-            #print(bbox[4:])
-            true_bboxes_list.append(BoundingBox(id, format=2, class_id=np.argmax(bbox[5:]), coordinates=bbox[:4]))
+            # np.max because it throws an error otherwise, don't ask me why
+            true_bboxes_list.append(BoundingBox(id, format=2, class_id=np.max(bbox[5]), coordinates=bbox[:4]))
         for bbox in pred_bboxes:
-            #print(bbox[:5])
-            pred_bboxes_list.append(BoundingBox(id, format=2, class_id=np.argmax(bbox[5:]), coordinates=bbox[:4], bb_type=2, confidence=bbox[4]))
+            pred_bboxes_list.append(BoundingBox(id, format=2, class_id=np.max(bbox[5]), coordinates=bbox[:4], bb_type=2, confidence=bbox[4]))
         progbar.update(id+1)
 
     return true_bboxes_list, pred_bboxes_list
@@ -88,7 +89,8 @@ def main(argv):
     labels = ds.get_optimised_dataset(tfrecord_paths, 1, params.model.grid.shape, shuffle=False).map(lambda x,y: util.postprocess_dataset_labels(y, params.dataset.image.size))
 
     logging.info('Loading Model...')
-    model = tf.keras.models.load_model(FLAGS.model_path, custom_objects={'loss': md.multi_nao_loss()})
+    yolo_anchors = np.array([(0.1499, 0.3052), (0.0563, 0.0748)], np.float32)
+    model = tf.keras.models.load_model(FLAGS.model_path, custom_objects={'loss': md.multi_nao_loss(yolo_anchors)})
 
     logging.info('Running model on testset...')
     predictions = model.predict(testset)
