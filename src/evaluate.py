@@ -14,6 +14,7 @@ import util.utils as util
 import src.evaluators.coco_evaluator as coco
 import sklearn.metrics as metrics
 import numpy as np
+import wandb
 
 from tensorflow.python.framework.versions import VERSION
 if VERSION >= "2.0.0a0":
@@ -71,12 +72,30 @@ def get_evaluation_summary(true_bboxes_list, pred_bboxes_list, ious, area_ranges
             coco_results['Nao.nr_positives'] = str(coco_metr[0]['total positives'])
             coco_results['Ball.AP@' + str(round(iou*100)) + key] = coco_metr[1]['AP']
             coco_results['Ball.nr_positives'] = str(coco_metr[1]['total positives'])
+            wandb.log({"Nao.AP": coco_metr[0]['AP'],
+                       "Total Positives": coco_metr[0]['total positives'],
+                       "Ball.AP": coco_metr[1]['AP'],
+                       "Ball Nr Positives": coco_metr[1]['total positives']})
     end = time.perf_counter() 
     logging.info('Calculated metrics in ' + str(end-start) + ' seconds')
+
 
     return coco_results
 
 def main(argv):
+
+     # initialize wandb with your project name and optionally with configutations.
+    run = wandb.init(project='r2k-object-detection',
+                     group='test-group',
+                     job_type='evalute',
+                     config={
+                        "learning_rate": params.train.lr,
+                        "epochs": params.train.epochs,
+                        "batch_size": params.train.batch_size,
+                        "dataset": "ImageTagger"
+                    })
+    config = wandb.config
+
     tf.get_logger().setLevel('ERROR')
 
     with open(FLAGS.dataset_info_path, 'r') as f:

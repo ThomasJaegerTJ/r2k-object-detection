@@ -110,13 +110,14 @@ def main(_):
    
     # initialize wandb with your project name and optionally with configutations.
     run = wandb.init(project='r2k-object-detection',
-               config={
-                  "learning_rate": 0.01,
-                  "epochs": 200,
-                  "batch_size": 16,
-                  "architecture": "CNN",
-                  "dataset": "ImageTagger"
-               })
+                     group='test-group',
+                     job_type='train',
+                     config={
+                        "learning_rate": params.train.lr,
+                        "epochs": params.train.epochs,
+                        "batch_size": params.train.batch_size,
+                        "dataset": "ImageTagger"
+                    })
     config = wandb.config
     
     # Multi GPU Support
