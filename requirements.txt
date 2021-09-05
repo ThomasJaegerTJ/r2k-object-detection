@@ -1,6 +1,6 @@
 sklearn
 pandas
-numpy
+numpy~=1.19.2
 tensorflow
 keras
 matplotlib
