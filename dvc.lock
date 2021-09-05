@@ -21,9 +21,9 @@ stages:
       --info_path=data/datasets/ImageTagger/info.json
     deps:
     - path: data/datasets/ImageTagger/labels
-      md5: cbf4b2db22b29fca4703750020436266.dir
-      size: 3893629
-      nfiles: 29
+      md5: f373fb62902bf4242bd26657aaee40b0.dir
+      size: 1123069
+      nfiles: 11
     - path: data/datasets/raw/ImageTagger
       md5: 0136ea4c8f0508aabd8a00a1d21e4e4d.dir
       size: 19162825290
@@ -40,11 +40,11 @@ stages:
         dataset.test_split: 0.2
     outs:
     - path: data/datasets/ImageTagger/info.json
-      md5: 4893e09a38c861796343021aa3182d43
-      size: 73
+      md5: 2ae9c0e73ac02f5c23d63a192d484c85
+      size: 72
     - path: data/datasets/ImageTagger/records
-      md5: 45dc2b67bf9bed2a1d64aec90f10d627.dir
-      size: 216767388
+      md5: 2a35a7b79cda3f61a5d447c8cceadcd6.dir
+      size: 69272946
       nfiles: 20
   train:
     cmd: python src/train.py --tfrecord_dir=data/datasets/ImageTagger/records/train
@@ -52,15 +52,15 @@ stages:
       --history_path=data/metrics/history.csv --dataset_info_path=data/datasets/ImageTagger/info.json
     deps:
     - path: data/datasets/ImageTagger/info.json
-      md5: 4893e09a38c861796343021aa3182d43
-      size: 73
+      md5: 2ae9c0e73ac02f5c23d63a192d484c85
+      size: 72
     - path: data/datasets/ImageTagger/records
-      md5: e0749aab2bc961ce5966cd082673a7f1.dir
-      size: 216767388
+      md5: 2a35a7b79cda3f61a5d447c8cceadcd6.dir
+      size: 69272946
       nfiles: 20
     - path: src/train.py
-      md5: a7272c7cce28afe7a6b7f610d20d905c
-      size: 5466
+      md5: f9d9ee9e8ad2272284f3a26e3c38b95c
+      size: 5840
     params:
       params.yaml:
         dataset.val_split: 0.1
@@ -77,36 +77,36 @@ stages:
           - 24
         train.batch_size: 16
         train.early_stopping: true
-        train.epochs: 200
+        train.epochs: 20
         train.lr: 0.01
     outs:
     - path: data/metrics/history.csv
-      md5: 18df3d633aae91af880325c107b1bdc4
-      size: 8585
+      md5: bbb18e543c5d17be7d7446e6149b7994
+      size: 844
     - path: data/models/experimodel
-      md5: 341e3593c4faf22d0bfdec47ae1d80b9.dir
-      size: 4034150
-      nfiles: 5
+      md5: 06864f6d9d4a96bc014045abb6d270b0.dir
+      size: 3843466
+      nfiles: 4
   evaluate:
     cmd: python src/evaluate.py --model_path=data/models/experimodel/experimodel.hdf5
       --testset_dir=data/datasets/ImageTagger/records/test --scores_path=data/metrics/scores.json
       --dataset_info_path=data/datasets/ImageTagger/info.json
     deps:
     - path: data/datasets/ImageTagger/info.json
-      md5: 4893e09a38c861796343021aa3182d43
-      size: 73
+      md5: 2ae9c0e73ac02f5c23d63a192d484c85
+      size: 72
     - path: data/datasets/ImageTagger/records/test
-      md5: 0657338ac461264837aaacc6f00a65b1.dir
-      size: 43358676
+      md5: 464f43cc203e4dff111b3be7e5073d42.dir
+      size: 13741673
       nfiles: 4
     - path: data/models/experimodel
-      md5: 341e3593c4faf22d0bfdec47ae1d80b9.dir
-      size: 4034150
-      nfiles: 5
+      md5: 06864f6d9d4a96bc014045abb6d270b0.dir
+      size: 3843466
+      nfiles: 4
     - path: src/evaluate.py
-      md5: e73ba99db3e9d6e6ad8a26935ef16488
-      size: 4392
+      md5: 6098875adfcf03f8cab6a651634b5122
+      size: 4984
     outs:
     - path: data/metrics/scores.json
-      md5: 2dcf8f80f9ecb57d792297cf018017bf
+      md5: 2b6136ea800f1318e78b400694b815d6
       size: 618
