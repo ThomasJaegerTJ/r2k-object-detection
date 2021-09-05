@@ -110,7 +110,7 @@ def main(_):
    
     # initialize wandb with your project name and optionally with configutations.
     run = wandb.init(project='r2k-object-detection',
-                     group='test-group',
+                     group= params.wandb.group,
                      job_type='train',
                      config={
                         "learning_rate": params.train.lr,

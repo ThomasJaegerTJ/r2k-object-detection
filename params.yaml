@@ -1,3 +1,6 @@
+wandb:
+  group: 'group2'
+
 dataset:
   nr_records: 20
   test_split: 0.2
