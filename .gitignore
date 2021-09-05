@@ -1,5 +1,5 @@
 # Weights and biases stuff
-wandb/
+wandb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -130,3 +130,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+wandb/latest-run
