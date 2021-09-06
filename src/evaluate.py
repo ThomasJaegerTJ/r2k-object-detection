@@ -81,9 +81,11 @@ def get_evaluation_summary(true_bboxes_list, pred_bboxes_list, ious, area_ranges
 def main(argv):
 
      # initialize wandb with your project name and optionally with configutations.
+
     run = wandb.init(project='r2k-object-detection',
                      group= params.wandb.group,
-                     job_type='evalute',
+                     job_type='evaluate',
+                     save_code=True,
                      config={
                         "learning_rate": params.train.lr,
                         "epochs": params.train.epochs,

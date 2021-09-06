@@ -58,6 +58,7 @@ def compile_model(model):
                     loss=md.multi_nao_loss(yolo_anchors),
                     #loss=md.YoloLoss(yolo_anchors),
                     optimizer=tf.keras.optimizers.Adam(learning_rate=params.train.lr),
+
                 )
 
     # Print info and architecture
@@ -71,7 +72,8 @@ def train(model, trainset, valset):
     callbacks = [
                     ModelCheckpoint(FLAGS.chkpts_dir + model_name + '/' + model_name + '_{epoch}.tf', verbose=1, save_weights_only=True),
                     TensorBoard(log_dir=FLAGS.logs_dir + model_name + '/' + '{}'.format(time())),
-                    ReduceLROnPlateau(verbose=1)
+                    ReduceLROnPlateau(verbose=1),
+                    WandbCallback()
                 ]
     if params.train.early_stopping:
         callbacks.append(EarlyStopping(patience=15, verbose=1, restore_best_weights=True, monitor='val_loss'))
@@ -80,7 +82,7 @@ def train(model, trainset, valset):
         trainset,
         validation_data=valset,
         epochs=params.train.epochs,
-        callbacks=[WandbCallback()]
+        callbacks=[callbacks]
     )
 
     return history
@@ -112,6 +114,7 @@ def main(_):
     run = wandb.init(project='r2k-object-detection',
                      group= params.wandb.group,
                      job_type='train',
+                     save_code=True,
                      config={
                         "learning_rate": params.train.lr,
                         "epochs": params.train.epochs,
