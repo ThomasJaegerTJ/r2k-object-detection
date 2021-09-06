@@ -1,5 +1,5 @@
 wandb:
-  group: 'group2'
+  group: 'group-01-run'
 
 dataset:
   nr_records: 20

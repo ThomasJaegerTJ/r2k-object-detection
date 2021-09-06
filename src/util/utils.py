@@ -47,10 +47,14 @@ def get_params(path='params.yaml'):
         model.grid.w = params['model']['grid']['w']
         model.grid.shape = (model.grid.w, model.grid.h)
 
+        wandb = Object()
+        wandb.group = params['wandb']['group']
+
         params = Object()
         params.dataset = dataset
         params.train = train
         params.model = model
+        params.wandb = wandb
         return params
 
 def create_dirs(dir_list):
